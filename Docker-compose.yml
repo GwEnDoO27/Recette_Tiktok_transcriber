@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: dockerfile.backend
+    ports:
+      - "8001:8001"
+    networks:
+      - "TST-Net"
+    env_file:
+      - ./Backend/.env
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8001/api/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+networks:
+  TST-Net:
+    driver: bridge
+

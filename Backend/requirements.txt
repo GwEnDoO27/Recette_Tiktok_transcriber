@@ -1,0 +1,9 @@
+yt-dlp>=2023.12.30
+regex>=2023.10.3
+moviepy
+openai-whisper
+torch
+torchaudio
+requests>=2.31.0
+uvicorn
+fastapi
