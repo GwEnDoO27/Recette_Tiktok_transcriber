@@ -1,3 +1,4 @@
-* .Ds_Store
-* .txt
-* .env
+.Ds_Store
+.txt
+.env
+.vscode
