@@ -106,34 +106,91 @@ class OllamaClient:
         Returns:
             Optional[dict]: Formatted recipe dict or None if failed
         """
-        prompt = f"""Tu es un expert en extraction de recettes de cuisine à partir de vidéos TikTok.
+        prompt = f"""Tu es un expert en extraction de recettes de cuisine à partir de vidéos TikTok et de contenu vidéo parlé.
 
-MISSION: Extraire une recette structurée à partir de la transcription d'une vidéo TikTok de cuisine.
+CONTEXTE: Les vidéos TikTok de cuisine contiennent souvent du bruit (hésitations, répétitions, appels à l'action).
+Ton rôle est d'extraire UNIQUEMENT le contenu culinaire pertinent.
 
-FORMAT DE SORTIE (JSON UNIQUEMENT):
+FORMAT DE SORTIE (JSON STRICT):
 {{
-    "title": "Titre de la recette",
-    "category": "Catégorie (ex: Entrée, Plat, Dessert, Boisson, Snack)",
+    "title": "Titre descriptif de la recette",
+    "category": "Une seule catégorie parmi: Entrée, Plat, Dessert, Boisson, Snack, Accompagnement, Sauce",
+    "servings": "Nombre de portions (ex: '4 personnes', '2 portions') OU null si non mentionné",
+    "prep_time": "Temps de préparation (ex: '15 min', '1h30') OU null si non mentionné",
+    "cook_time": "Temps de cuisson (ex: '20 min', '45 min') OU null si non mentionné",
+    "difficulty": "Facile, Moyen ou Difficile OU null si non déductible",
     "ingredients": [
-        "quantité ingrédient 1",
-        "quantité ingrédient 2"
+        "quantité + unité + ingrédient (ex: '200g de farine', '3 œufs', '1 pincée de sel')"
     ],
     "steps": [
-        "étape 1",
-        "étape 2"
+        "Étape claire et concise avec verbe d'action"
+    ],
+    "tips": [
+        "Conseils ou astuces mentionnés (optionnel)"
     ]
 }}
 
-RÈGLES STRICTES:
-- Sois TRÈS concis.
-- Extrais UNIQUEMENT les infos présentes dans la transcription.
-- Si une quantité n'est pas mentionnée, écris juste l'ingrédient.
-- Reformule les étapes de façon claire et courte.
-- Réponds UNIQUEMENT avec le JSON valide.
+RÈGLES D'EXTRACTION:
 
-TRANSCRIPTION:
+1. TITRE:
+   - Déduis un titre clair si non explicitement mentionné
+   - Utilise les ingrédients principaux (ex: "Gâteau au chocolat", "Salade César")
+
+2. INGRÉDIENTS:
+   - Standardise les quantités: g, kg, ml, L, c. à soupe, c. à café
+   - Conserve "une pincée", "un peu de", "au goût" si mentionné
+   - Si aucune quantité: écris juste l'ingrédient (ex: "sel", "poivre")
+   - Regroupe les ingrédients identiques
+
+3. ÉTAPES:
+   - Commence chaque étape par un verbe d'action (Mélanger, Cuire, Préchauffer, etc.)
+   - Sois concis mais précis (température, durée, technique)
+   - Ignore les répétitions et hésitations
+   - Numérotation logique (préparation → cuisson → finition)
+
+4. CONTENU À IGNORER:
+   - Appels à l'action ("like", "abonne-toi", "partage", "commente")
+   - Transitions non-culinaires ("alors", "du coup", "voilà")
+   - Répétitions et hésitations ("euh", "donc euh", redites)
+
+5. MÉTADONNÉES:
+   - Utilise null (pas de guillemets) si l'info n'est pas dans la transcription
+   - Ne JAMAIS inventer ou supposer des informations
+
+EXEMPLE DE SORTIE:
+{{
+    "title": "Cookies au chocolat",
+    "category": "Dessert",
+    "servings": "12 cookies",
+    "prep_time": "15 min",
+    "cook_time": "12 min",
+    "difficulty": "Facile",
+    "ingredients": [
+        "200g de farine",
+        "100g de beurre mou",
+        "150g de pépites de chocolat",
+        "1 œuf",
+        "100g de sucre",
+        "1 c. à café de levure"
+    ],
+    "steps": [
+        "Préchauffer le four à 180°C",
+        "Mélanger le beurre et le sucre jusqu'à obtenir une crème",
+        "Ajouter l'œuf et bien incorporer",
+        "Incorporer la farine et la levure",
+        "Ajouter les pépites de chocolat",
+        "Former des boules et déposer sur une plaque",
+        "Cuire 12 minutes jusqu'à ce qu'ils soient dorés"
+    ],
+    "tips": [
+        "Ne pas trop cuire pour garder un cœur moelleux"
+    ]
+}}
+
+TRANSCRIPTION À ANALYSER:
 {transcription}
-"""
+
+RÉPONDS UNIQUEMENT AVEC LE JSON VALIDE. AUCUN TEXTE AVANT OU APRÈS."""
 
         print(f"\n{'=' * 60}")
         print(f"EXTRACTION DE RECETTE - {model.upper()}")
