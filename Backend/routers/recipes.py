@@ -1,17 +1,16 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks  # type: ignore
-from pydantic import BaseModel
 import uuid
-from typing import Dict, Any
+from typing import Any, Dict
 
+from fastapi import APIRouter, BackgroundTasks, HTTPException  # type: ignore
 from internals.core.Convertion.speak_to_text import speak_to_text
-from internals.core.Downloading.downloader import TikTokDownloader
+from internals.core.Downloading.downloader import find_the_downloader
 from internals.Utils.environnement import get_environment
 from internals.Utils.extract import extract_recipes
+from pydantic import BaseModel  # type: ignore
 
 transform_tiktok = APIRouter()
 
 # In-memory job storage
-# Structure: { "job_id": { "status": "pending" | "completed" | "failed", "result": ..., "error": ... } }
 jobs: Dict[str, Any] = {}
 
 
@@ -26,7 +25,7 @@ def process_video_task(job_id: str, link: str):
     """
     try:
         print(f"Starting job {job_id} for link: {link}")
-        
+
         try:
             whisper_model, ollama_model_primary, ollama_url = get_environment()
         except Exception as e:
@@ -37,16 +36,19 @@ def process_video_task(job_id: str, link: str):
 
         path = None
         try:
-            downloader = TikTokDownloader()
-            path = downloader.download_video(link)
-        except Exception as e:
-            error_msg = f"Erreur téléchargement: {str(e)}"
+            path = find_the_downloader(link)
+            if not path:
+                error_msg = "Impossible de télécharger la vidéo. Vérifiez l'URL."
+                print(error_msg)
+                jobs[job_id] = {"status": "failed", "error": error_msg}
+                return
+        except ValueError as e:
+            error_msg = f"URL invalide: {str(e)}"
             print(error_msg)
             jobs[job_id] = {"status": "failed", "error": error_msg}
             return
-
-        if not path:
-            error_msg = "Impossible de télécharger la vidéo. Vérifiez l'URL."
+        except Exception as e:
+            error_msg = f"Erreur téléchargement: {str(e)}"
             print(error_msg)
             jobs[job_id] = {"status": "failed", "error": error_msg}
             return
@@ -93,9 +95,9 @@ async def Trad_Tiktok(request: VideoRequest, background_tasks: BackgroundTasks):
     """
     job_id = str(uuid.uuid4())
     jobs[job_id] = {"status": "pending"}
-    
+
     background_tasks.add_task(process_video_task, job_id, request.link)
-    
+
     return {"job_id": job_id, "status": "pending"}
 
 
@@ -106,5 +108,5 @@ async def get_job_status(job_id: str):
     """
     if job_id not in jobs:
         raise HTTPException(status_code=404, detail="Job not found")
-    
+
     return jobs[job_id]
