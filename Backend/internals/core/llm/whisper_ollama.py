@@ -94,7 +94,7 @@ class OllamaClient:
             return None
 
     def extract_recipe(
-        self, transcription: str, model: str = "llama3.2"
+        self, transcription: str, model: str = "llama3.2", metadata: Optional[dict] = None
     ) -> Optional[dict]:
         """
         Extract structured recipe from TikTok cooking video transcription
@@ -102,14 +102,27 @@ class OllamaClient:
         Args:
             transcription (str): Raw transcription from Whisper
             model (str): Model name to use
+            metadata (Optional[dict]): Video metadata including description
 
         Returns:
             Optional[dict]: Formatted recipe dict or None if failed
         """
+        # Construire le contexte avec la description si disponible
+        context_section = ""
+        if metadata and metadata.get("description"):
+            context_section = f"""
+DESCRIPTION DE LA VIDÉO:
+{metadata['description']}
+
+IMPORTANT: Si la description contient déjà des quantités précises pour les ingrédients, utilise-les PRIORITAIREMENT.
+La description est souvent plus fiable que la transcription audio pour les quantités exactes.
+"""
+
         prompt = f"""Tu es un expert en extraction de recettes de cuisine à partir de vidéos TikTok et de contenu vidéo parlé.
 
 CONTEXTE: Les vidéos TikTok de cuisine contiennent souvent du bruit (hésitations, répétitions, appels à l'action).
 Ton rôle est d'extraire UNIQUEMENT le contenu culinaire pertinent.
+{context_section}
 
 FORMAT DE SORTIE (JSON STRICT):
 {{

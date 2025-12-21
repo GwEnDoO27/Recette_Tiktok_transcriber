@@ -68,6 +68,51 @@ class TikTokDownloader:
             return f"{custom_name}_{timestamp}.mp4"
         return f"tiktok_{timestamp}.mp4"
 
+    def get_video_info(self, video_url: str) -> Optional[Dict[str, Any]]:
+        """
+        Extract TikTok video metadata including description
+
+        Args:
+            video_url (str): URL of the TikTok video
+
+        Returns:
+            Optional[Dict[str, Any]]: Dictionary containing video metadata or None if failed
+        """
+        if not self.validate_url(video_url):
+            print("Error: Invalid TikTok URL")
+            return None
+
+        ydl_opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "extractor_args": {"tiktok": {"webpage_download": True}},
+            "http_headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            },
+        }
+
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(video_url, download=False)
+                return {
+                    "title": info.get("title"),
+                    "description": info.get("description"),
+                    "uploader": info.get("uploader"),
+                    "uploader_id": info.get("uploader_id"),
+                    "duration": info.get("duration"),
+                    "view_count": info.get("view_count"),
+                    "like_count": info.get("like_count"),
+                    "comment_count": info.get("comment_count"),
+                    "thumbnail": info.get("thumbnail"),
+                    "upload_date": info.get("upload_date"),
+                }
+        except yt_dlp.utils.DownloadError as e:
+            print(f"Error extracting video info: {str(e)}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {str(e)}")
+
+        return None
+
     def download_video(
         self, video_url: str, custom_name: Optional[str] = None
     ) -> Optional[str]:

@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Literal, Optional, Dict
 
 from internals.core.llm.whisper_ollama import OllamaClient
 
@@ -7,6 +7,7 @@ def extract_recipes(
     ollama_url: str,
     ollama_model_primary: str,
     transcription: Any | Literal[""],
+    metadata: Optional[Dict[str, Any]] = None,
 ):
     # Step 3: Extract recipe with Ollama
     print("\nSTEP 3: Extracting recipe with LLM")
@@ -21,6 +22,8 @@ def extract_recipes(
 
     print(f"✓ Connected to Ollama at {ollama_url}")
     # Extract recipe with primary model
-    recipe = ollama.extract_recipe(transcription, model=ollama_model_primary)
+    recipe = ollama.extract_recipe(
+        transcription, model=ollama_model_primary, metadata=metadata
+    )
 
     return recipe
