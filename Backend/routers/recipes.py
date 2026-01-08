@@ -54,10 +54,24 @@ def process_video_task(job_id: str, link: str):
         if isinstance(path, dict):
             # C'est une recette extraite d'un site web
             jobs[job_id]["current_step"] = "Formatage de la recette..."
+
+            # Convertir les instructions en liste de steps
+            instructions = path.get("instruction", "Instructions non disponibles")
+            if isinstance(instructions, str):
+                # Diviser les instructions en étapes (supposer qu'elles sont séparées par des numéros ou des sauts de ligne)
+                steps = [step.strip() for step in instructions.split('\n') if step.strip()]
+            else:
+                steps = instructions
+
+            # Récupérer les ingrédients
+            ingredients = path.get("ingredients", [])
+            if not isinstance(ingredients, list):
+                ingredients = []
+
             recipe = {
                 "title": path.get("title", "Recette sans titre"),
-                "ingredients": [],
-                "steps": path.get("instruction", "Instructions non disponibles"),
+                "ingredients": ingredients,
+                "steps": steps,
                 "source": "website"
             }
             formatted_text = format_recipe_for_display(recipe, link)

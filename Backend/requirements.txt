@@ -7,3 +7,6 @@ torchaudio
 requests>=2.31.0
 uvicorn
 fastapi
+recipe_scrapers
+beautifulsoup4
+lxml
