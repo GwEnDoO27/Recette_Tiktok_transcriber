@@ -10,6 +10,7 @@ class TikTokDownloader:
     def __init__(self, save_path: str = "tiktok_videos"):
         """
         Initialize TikTok downloader with configurable save path
+        
 
         Args:
             save_path (str): Directory where videos will be saved
@@ -85,10 +86,7 @@ class TikTokDownloader:
         ydl_opts = {
             "quiet": True,
             "no_warnings": True,
-            "extractor_args": {"tiktok": {"webpage_download": True}},
-            "http_headers": {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-            },
+            "extractor_args": {"tiktok": {"api_hostname": "api22-normal-c-useast2a.tiktokv.com"}},
         }
 
         try:
@@ -108,8 +106,12 @@ class TikTokDownloader:
                 }
         except yt_dlp.utils.DownloadError as e:
             print(f"Error extracting video info: {str(e)}")
+            import traceback
+            traceback.print_exc()
         except Exception as e:
             print(f"An unexpected error occurred: {str(e)}")
+            import traceback
+            traceback.print_exc()
 
         return None
 
@@ -139,10 +141,7 @@ class TikTokDownloader:
             "noplaylist": True,
             "quiet": False,
             "progress_hooks": [self.progress_hook],
-            "extractor_args": {"tiktok": {"webpage_download": True}},
-            "http_headers": {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-            },
+            "extractor_args": {"tiktok": {"api_hostname": "api22-normal-c-useast2a.tiktokv.com"}},
         }
 
         try:
@@ -153,7 +152,11 @@ class TikTokDownloader:
 
         except yt_dlp.utils.DownloadError as e:
             print(f"Error downloading video: {str(e)}")
+            import traceback
+            traceback.print_exc()
         except Exception as e:
             print(f"An unexpected error occurred: {str(e)}")
+            import traceback
+            traceback.print_exc()
 
         return None
