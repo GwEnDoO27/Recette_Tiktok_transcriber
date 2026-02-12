@@ -2,9 +2,6 @@ yt-dlp
 yt-dlp[curl-cffi]
 regex
 moviepy
-openai-whisper
-torch
-torchaudio
 requests
 uvicorn
 fastapi

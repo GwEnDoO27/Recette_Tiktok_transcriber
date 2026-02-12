@@ -8,6 +8,7 @@ from fastapi import FastAPI  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 from routers.health import health  # type: ignore
 from routers.recipes import transform_tiktok  # type: ignore
+from routers.web import web_router  # type: ignore
 
 # ═══════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -40,6 +41,11 @@ ROUTER_CONFIG = [
         "tags": ["Convertion d'audio à text"],
     },
     {"router": health, "prefix": "/api", "tags": ["Health Check"]},
+    {
+        "router": web_router,
+        "prefix": "/api/web",
+        "tags": ["Interface Web"],
+    },
 ]
 
 # ═══════════════════════════════════════════════════════════════════

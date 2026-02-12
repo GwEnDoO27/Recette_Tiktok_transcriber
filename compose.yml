@@ -12,17 +12,71 @@ services:
       - ./Backend/.env
     environment:
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - WHISPER_BASE_URL=http://whisper:9000
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      whisper:
+        condition: service_healthy
     healthcheck:
-      test: [ "CMD", "wget", "--spider", "-q", "--method=GET", "http://localhost:8001/api/health" ]
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
     restart: unless-stopped
 
+  whisper:
+    container_name: Recette-whisper
+    build:
+      context: ./Whisper
+      dockerfile: dockerfile.whisper
+    networks:
+      - "TST-Net"
+    environment:
+      - WHISPER_MODEL=medium
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - whisper-cache:/root/.cache/whisper
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  frontend:
+    container_name: Recette-frontend
+    build:
+      context: ./frontend
+      dockerfile: dockerfile.frontend
+    ports:
+      - "60802:8002"
+    networks:
+      - "TST-Net"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    #healthcheck:
+    #  test: [ "CMD", "wget", "--spider", "-q", "--method=GET", "http://localhost:8002" ]
+    #  interval: 10s
+    #  timeout: 5s
+    #  retries: 3
+    #  start_period: 10s
+    #restart: unless-stopped
+
 networks:
   TST-Net:
     driver: bridge
 
+volumes:
+  whisper-cache:
